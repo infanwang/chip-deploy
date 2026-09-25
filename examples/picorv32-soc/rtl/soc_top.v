@@ -14,7 +14,14 @@ module soc_top (
     input  wire        spi_miso,
     output wire        spi_cs_n,
     // 调试
-    output wire        trap
+    output wire        trap,
+    // 调试端口（用于 bus trace）
+    output wire        dbg_mem_valid,
+    output wire        dbg_mem_ready,
+    output wire [31:0] dbg_mem_addr,
+    output wire [31:0] dbg_mem_wdata,
+    output wire [3:0]  dbg_mem_wstrb,
+    output wire [31:0] dbg_mem_rdata
 );
     // ═══ PicoRV32 memory interface ═══
     wire        mem_valid;
@@ -33,6 +40,7 @@ module soc_top (
     wire sel_gpio  = (dev_sel == 4'h2);
     wire sel_uart  = (dev_sel == 4'h3);
     wire sel_spi   = (dev_sel == 4'h4);
+    wire sel_ram   = (dev_sel == 4'h5);
 
     wire mem_we = mem_valid && (|mem_wstrb);
 
@@ -42,17 +50,27 @@ module soc_top (
     wire [31:0] gpio_rdata;
     wire [31:0] uart_rdata;
     wire [31:0] spi_rdata;
+    wire [31:0] ram_rdata;
     wire [31:0] gpio_out_full;
 
-    assign mem_ready = mem_valid && (sel_rom | sel_timer | sel_gpio | sel_uart | sel_spi);
+    assign mem_ready = mem_valid && (sel_rom | sel_timer | sel_gpio | sel_uart | sel_spi | sel_ram);
 
     assign mem_rdata = sel_rom   ? rom_rdata   :
                        sel_timer ? timer_rdata :
                        sel_gpio  ? gpio_rdata  :
                        sel_uart  ? uart_rdata  :
-                       sel_spi   ? spi_rdata   : 32'h0;
+                       sel_spi   ? spi_rdata   :
+                       sel_ram   ? ram_rdata   : 32'h0;
 
     assign gpio_out = gpio_out_full[15:0];
+    
+    // 调试信号（转发内部 bus 信号到输出端口）
+    assign dbg_mem_valid = mem_valid;
+    assign dbg_mem_ready = mem_ready;
+    assign dbg_mem_addr  = mem_addr;
+    assign dbg_mem_wdata = mem_wdata;
+    assign dbg_mem_wstrb = mem_wstrb;
+    assign dbg_mem_rdata = mem_rdata;
 
     // ═══ PicoRV32 例化 ═══
     picorv32 #(
@@ -71,9 +89,9 @@ module soc_top (
         .ENABLE_PCPI           (0),
         .ENABLE_MUL            (0),
         .ENABLE_DIV            (0),
-        .ENABLE_IRQ            (1),
-        .ENABLE_IRQ_QREGS      (1),
-        .ENABLE_IRQ_TIMER      (1),
+        .ENABLE_IRQ            (0),
+        .ENABLE_IRQ_QREGS      (0),
+        .ENABLE_IRQ_TIMER      (0),
         .ENABLE_TRACE          (0),
         .REGS_INIT_ZERO        (0),
         .MASKED_IRQ            (32'h0000_0000),
@@ -155,6 +173,17 @@ module soc_top (
     );
 
     // ═══ SPI Master ═══
+
+    ram u_ram (
+        .clk    (clk),
+        .sel    (sel_ram && mem_valid),
+        .we     (mem_we),
+        .wstrb  (mem_wstrb),
+        .addr   (mem_addr),
+        .wdata  (mem_wdata),
+        .rdata  (ram_rdata)
+    );
+
     spi_master u_spi (
         .clk    (clk),
         .rst_n  (rst_n),

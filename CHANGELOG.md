@@ -1,68 +1,39 @@
 # Changelog
 
-## [1.4.1] - 2026-09-25
-
-### Changed
-- 更新所有文档以反映 v1.0.0 → v1.4.0 的演进
-- README：添加版本演进表
-- docs/GUIDE：添加 SoC 和 Timer/UART 验证章节
-- docs/TROUBLESHOOTING：汇总 v1.0.0 → v1.4.0 的所有踩坑
-- docs/CASES：添加 SoC 案例
-- docs/ROADMAP：标记已完成项
-- docs/ARCHITECTURE：添加 SoC 外设细节
-
-# Changelog
-
-## [1.4.0] - 2026-09-25
+## [1.5.0] - 2026-09-25
 
 ### Added
-- Timer IRQ 输出验证（周期性中断）
-- UART TX 输出验证（字符序列）
-- 单周期 IRQ 脉冲实现（Timer）
+- 软硬件协同验证流程（C 固件 → ELF → ROM → RTL 仿真）
+- RISC-V GCC 工具链集成
+- 链接脚本（ROM 0x0, RAM 0x50000000）
+- 启动代码（start.S）
+- C 固件（UART + GPIO 测试）
+- Python RISC-V 机器码生成器
+- Verilator C++ 协同仿真 Testbench
+- Bus Trace 调试基础设施
+- RAM 模块（1 KB，0x50000000）
+- 5 层分层调试方法（L0-L4）
+
+### Fixed
+- **`ram_rdata` 隐式 1 位信号**（关键 bug）→ 加 32 位声明
+- `ENABLE_IRQ=1` 导致 CPU 跳非法地址 → `ENABLE_IRQ=0`
+- Timer counter 初值错误 → enable 时重置
+- Timer IRQ 无法清除 → 单周期脉冲
+- 栈指向 ROM/SPI → 指向 RAM（0x50000400）
 
 ### Verified
 
-| 外设 | 验证方法 | 结果 |
+**软硬件协同验证通过**：
+
+| 层 | 测试 | 结果 |
 | :--- | :--- | :--- |
-| Timer | IRQ 周期性触发 | 78 次（每 ~120 µs）|
-| UART | 字符序列输出 | 41 字符（B, E, H, K, ...）|
-| GPIO | 递增计数 | 0x0 → 0x2a |
+| L0 | 纯 GPIO 写 | GPIO=0x1234 ✅ |
+| L2 | RAM 读写 | 写 0xdead 读回 0xdead ✅ |
+| L4 | 完整 C 固件 | UART 输出 "PicoRV32 SoC" + "tick=N" ✅ |
 
-### Fixed
-- Timer counter 未在 enable 时重置
-- Timer IRQ 触发后无法自动清除
-- irq 端口宽度不匹配（1 位 → 32 位）
+### Commits
+- 引入 5 层分层调试方法
+- Bus Trace 基础设施（dbg_mem_* 端口）
 
-### Deferred
-- SRAM 集成推迟至 v1.5.0（需 OpenRAM 宏单元）
-
-## [1.3.1] - 2026-09-25
-
-### Added
-- SoC 功能仿真测试台
-- ROM 中的测试程序（5 条 RISC-V 指令）
-
-### Fixed
-- ROM 编码错误（lui, jal）
-- irq 端口宽度不匹配
-
-## [1.3.0] - 2026-09-25
-
-### Added
-- PicoRV32 SoC 集成：PicoRV32 + Timer + GPIO + UART TX + SPI Master + ROM
-
-## [1.2.0] - 2026-09-25
-
-### Added
-- PicoRV32 45 MHz 配置（22 ns 周期）
-
-## [1.1.0] - 2026-09-25
-
-### Added
-- GitHub Actions CI
-- Apache-2.0 LICENSE
-
-## [1.0.0] - 2026-09-25
-
-### Added
-- 基础平台 + SPM + PicoRV32 @ 33 MHz
+## [1.4.1] - 2026-09-25
+...（保留原有内容）

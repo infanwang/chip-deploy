@@ -1,60 +1,74 @@
 # PicoRV32 SoC 集成示例
 
-PicoRV32 + Timer + GPIO + UART TX + SPI Master + ROM。
+PicoRV32 + Timer + GPIO + UART TX + SPI Master + ROM + RAM。
 
 ## 外设地址映射
 
 | 外设 | 基地址 | 说明 |
 | :--- | :--- | :--- |
-| ROM | 0x00000000 | 程序存储 |
-| Timer | 0x10000000 | 定时器（含中断）|
+| ROM | 0x00000000 | 程序存储（4 KB）|
+| Timer | 0x10000000 | 定时器 |
 | GPIO | 0x20000000 | 32 位 IO |
 | UART TX | 0x30000000 | 串口发送 |
 | SPI Master | 0x40000000 | SPI 主机 |
+| RAM | 0x50000000 | 1 KB 数据/栈 |
 
-## 功能验证
+## 软硬件协同验证
 
-Timer IRQ 验证（78 次触发）：
+**编译 C 固件**：
 
-    iverilog -o sim_soc rtl/*.v tb/tb_soc.v
-    vvp sim_soc
+    cd firmware
+    make
 
-预期输出片段：
+生成：
+- `firmware.elf`（RISC-V ELF）
+- `firmware.bin`（二进制）
+- `firmware.hex`（ROM 初始化）
 
-    Timer IRQ #1 触发！GPIO=0x0000
-    Timer IRQ #2 触发！GPIO=0x0000
+**生成 ROM Verilog**：
+
+    python3 - <<'PY_EOF' > ../rtl/rom.v
+    lines = open('firmware.hex').read().strip().split('\n')
+    print("module rom (")
+    print("    input wire [7:0] addr,")
+    print("    output reg [31:0] rdata")
+    print(");")
+    print("    always @(*) begin")
+    print("        case (addr)")
+    for i, line in enumerate(lines):
+        print("            8'h%02x: rdata = 32'h%s;" % (i, line.strip()))
+    print("            default: rdata = 32'h00000013;")
+    print("        endcase")
+    print("    end")
+    print("endmodule")
+    PY_EOF
+
+**Verilator 协同仿真**：
+
+    verilator --cc --exe --build -Wno-fatal \
+        -Wno-DECLFILENAME -Wno-PINCONNECTEMPTY -Wno-IMPLICIT -Wno-WIDTHEXPAND \
+        rtl/picorv32.v rtl/soc_top.v rtl/rom.v rtl/ram.v \
+        rtl/timer.v rtl/gpio.v rtl/uart_tx.v rtl/spi_master.v \
+        tb/tb_soc.cpp -o sim_soc --top-module soc_top
+
+    ./obj_dir/sim_soc
+
+**预期输出**：
+
+    ═══ L4: 完整 C 固件验证 ═══
+    --- UART 输出 ---
+    PicoRV32 SoC @ 40 MHz
+    UART + GPIO test started
+    tick=100
+    tick=200
     ...
-    Timer IRQ 总数: 78
-
-UART 验证（字符序列）：
-
-    UART RX #1: 'B' (0x42)
-    UART RX #2: 'E' (0x45)
-    UART RX #3: 'H' (0x48)
-    ...
-    UART 累计接收: 41 字符
 
 ## 综合结果
 
 | 指标 | 值 |
 | :--- | ---: |
 | 标准单元 | 15,002 |
-| 面积 | 221,653 um2 |
+| 面积 | 221,653 um² |
 | 功耗 | 12.72 mW |
 | 频率 | 40 MHz（25 ns）|
-| Setup 裕量（SS）| +2.767 ns |
-| Hold 裕量（FF）| +0.122 ns |
-| DRC / LVS / Antenna | 全通过 |
-| 运行时长 | 16 分 27 秒 |
-
-## 完整流程
-
-    cd ~/chip-design/shared
-    git clone https://gitcode.com/gh_mirrors/pic/picorv32.git picorv32-soc
-    cd picorv32-soc
-    cp -r ~/chip-deploy/examples/picorv32-soc/rtl .
-    cp -r ~/chip-deploy/examples/picorv32-soc/tb .
-    cp ~/chip-deploy/examples/picorv32-soc/config.yaml .
-    cp ~/chip-deploy/examples/picorv32-soc/constraint.sdc .
-    librelane --dockerized --pdk-root $PDK_ROOT --pdk sky130A \
-        --run-tag soc-run-01 config.yaml
+| DRC / LVS / Antenna | ✅ 全通过 |
