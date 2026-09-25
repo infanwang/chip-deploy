@@ -1,0 +1,8 @@
+DESIGN_NAME: picorv32
+VERILOG_FILES: dir::picorv32.v
+CLOCK_PORT: clk
+CLOCK_PERIOD: 22
+PDK: sky130A
+STD_CELL_LIBRARY: sky130_fd_sc_hd
+PNR_SDC_FILE: dir::constraint.sdc
+SIGNOFF_SDC_FILE: dir::constraint.sdc
