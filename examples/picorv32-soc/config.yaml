@@ -1,0 +1,15 @@
+DESIGN_NAME: soc_top
+VERILOG_FILES:
+  - dir::rtl/picorv32.v
+  - dir::rtl/soc_top.v
+  - dir::rtl/rom.v
+  - dir::rtl/timer.v
+  - dir::rtl/gpio.v
+  - dir::rtl/uart_tx.v
+  - dir::rtl/spi_master.v
+CLOCK_PORT: clk
+CLOCK_PERIOD: 25
+PDK: sky130A
+STD_CELL_LIBRARY: sky130_fd_sc_hd
+PNR_SDC_FILE: dir::constraint.sdc
+SIGNOFF_SDC_FILE: dir::constraint.sdc
