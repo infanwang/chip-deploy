@@ -1,5 +1,7 @@
 # chip-deploy
-
+[![CI](https://github.com/infanwang/chip-deploy/actions/workflows/ci.yml/badge.svg)](https://github.com/infanwang/chip-deploy/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/infanwang/chip-deploy)](https://github.com/infanwang/chip-deploy/releases)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 **开源芯片设计端到端平台** — 从 RTL 到可流片 GDSII。
 
 在 WSL2 Ubuntu 26.04 上，使用 **Nix + Docker + LibreLane + SkyWater SKY130 PDK** 构建工业级开源 EDA 工具链。

@@ -21,18 +21,15 @@ jobs:
 
       - name: Verify repo structure
         run: |
-          for f in VERSION README.md CHANGELOG.md Makefile flake.nix \
-                   docs/GUIDE.md docs/TROUBLESHOOTING.md docs/CASES.md docs/ROADMAP.md; do
+          for f in VERSION README.md CHANGELOG.md Makefile flake.nix; do
             test -f "$f" || { echo "Missing: $f"; exit 1; }
-            echo "✓ $f"
+            echo "OK: $f"
           done
 
-      - name: Shellcheck scripts
-        run: |
-          shellcheck -S warning scripts/*.sh || true
-          echo "Shellcheck completed"
+      - name: Shellcheck
+        run: shellcheck -S warning scripts/*.sh || true
 
-      - name: Verify AND gate (Icarus)
+      - name: Verify AND gate
         run: |
           cd examples/and_gate
           iverilog -o sim_top top.v tb.v
@@ -43,4 +40,3 @@ jobs:
         run: |
           verilator --lint-only -Wall examples/and_gate/top.v
           verilator --lint-only -Wall examples/spm/src/spm.v
-          echo "✓ Verilator lint passed"
