@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint & Quick Checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck iverilog verilator
+
+      - name: Verify repo structure
+        run: |
+          for f in VERSION README.md CHANGELOG.md Makefile flake.nix \
+                   docs/GUIDE.md docs/TROUBLESHOOTING.md docs/CASES.md docs/ROADMAP.md; do
+            test -f "$f" || { echo "Missing: $f"; exit 1; }
+            echo "✓ $f"
+          done
+
+      - name: Shellcheck scripts
+        run: |
+          shellcheck -S warning scripts/*.sh || true
+          echo "Shellcheck completed"
+
+      - name: Verify AND gate (Icarus)
+        run: |
+          cd examples/and_gate
+          iverilog -o sim_top top.v tb.v
+          vvp sim_top | tee /tmp/sim.out
+          grep -q "y=1" /tmp/sim.out
+
+      - name: Verilator lint
+        run: |
+          verilator --lint-only -Wall examples/and_gate/top.v
+          verilator --lint-only -Wall examples/spm/src/spm.v
+          echo "✓ Verilator lint passed"
