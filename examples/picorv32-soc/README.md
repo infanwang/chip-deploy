@@ -12,25 +12,27 @@ PicoRV32 + Timer + GPIO + UART TX + SPI Master + ROM。
 | UART TX | 0x30000000 | 串口发送 |
 | SPI Master | 0x40000000 | SPI 主机 |
 
-## 功能仿真
+## 功能验证
 
-编译并运行：
+Timer IRQ 验证（78 次触发）：
 
-    iverilog -o sim_soc \
-        rtl/picorv32.v rtl/soc_top.v rtl/rom.v \
-        rtl/timer.v rtl/gpio.v rtl/uart_tx.v rtl/spi_master.v \
-        tb/tb_soc.v
+    iverilog -o sim_soc rtl/*.v tb/tb_soc.v
     vvp sim_soc
 
-预期输出：
+预期输出片段：
 
-    >>> GPIO 变化: 0x0000 -> 0x0001 <<<
-    >>> GPIO 变化: 0x0001 -> 0x0002 <<<
+    Timer IRQ #1 触发！GPIO=0x0000
+    Timer IRQ #2 触发！GPIO=0x0000
     ...
-    仿真结束
-    最终 GPIO: 0x002c
-    最终 PC:   0x00000008
-    trap:      0
+    Timer IRQ 总数: 78
+
+UART 验证（字符序列）：
+
+    UART RX #1: 'B' (0x42)
+    UART RX #2: 'E' (0x45)
+    UART RX #3: 'H' (0x48)
+    ...
+    UART 累计接收: 41 字符
 
 ## 综合结果
 
@@ -47,20 +49,12 @@ PicoRV32 + Timer + GPIO + UART TX + SPI Master + ROM。
 
 ## 完整流程
 
-1. 克隆 PicoRV32 源码：
-
     cd ~/chip-design/shared
     git clone https://gitcode.com/gh_mirrors/pic/picorv32.git picorv32-soc
     cd picorv32-soc
-
-2. 复制本示例文件：
-
     cp -r ~/chip-deploy/examples/picorv32-soc/rtl .
     cp -r ~/chip-deploy/examples/picorv32-soc/tb .
     cp ~/chip-deploy/examples/picorv32-soc/config.yaml .
     cp ~/chip-deploy/examples/picorv32-soc/constraint.sdc .
-
-3. 运行 LibreLane：
-
     librelane --dockerized --pdk-root $PDK_ROOT --pdk sky130A \
         --run-tag soc-run-01 config.yaml

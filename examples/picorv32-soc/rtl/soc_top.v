@@ -105,7 +105,7 @@ module soc_top (
         .pcpi_rd       (32'h0),
         .pcpi_wait     (1'b0),
         .pcpi_ready    (1'b0),
-        .irq           (irq_timer),
+        .irq           ({31'b0, irq_timer}),
         .eoi           (),
         .trace_valid   (),
         .trace_data    ()
