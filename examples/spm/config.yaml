@@ -1,0 +1,6 @@
+DESIGN_NAME: spm
+VERILOG_FILES: dir::src/spm.v
+CLOCK_PORT: clk
+CLOCK_PERIOD: 10
+PDK: sky130A
+STD_CELL_LIBRARY: sky130_fd_sc_hd

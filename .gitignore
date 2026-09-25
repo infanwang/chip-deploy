@@ -1,0 +1,27 @@
+# 运行时状态
+.state/
+*.log
+*.bak
+runs/
+obj_dir/
+*.o
+*.d
+*.vcd
+*.gds.lock
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 大文件（PDK、Nix store、GDS）
+pdk/
+*.gds
+*.tar.gz
+*.tar.xz
+!examples/**/*.gds
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*~
