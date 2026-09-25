@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.1] - 2026-09-25
+
+### Changed
+- 更新所有文档以反映 v1.0.0 → v1.4.0 的演进
+- README：添加版本演进表
+- docs/GUIDE：添加 SoC 和 Timer/UART 验证章节
+- docs/TROUBLESHOOTING：汇总 v1.0.0 → v1.4.0 的所有踩坑
+- docs/CASES：添加 SoC 案例
+- docs/ROADMAP：标记已完成项
+- docs/ARCHITECTURE：添加 SoC 外设细节
+
+# Changelog
+
 ## [1.4.0] - 2026-09-25
 
 ### Added
